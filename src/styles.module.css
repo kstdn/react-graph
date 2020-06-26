@@ -1,0 +1,142 @@
+.graph {
+  --graph-space: 10px;
+  --text-color: white;
+  --node-padding: var(--graph-space);
+  --node-stroke-color: var(--text-color);
+  --node-background: transparent;
+  --focused-node-stroke-color: var(--node-stroke-color);
+  --focused-node-background: rgba(255, 255, 255, 0.1);
+  --selected-node-stroke-color: var(--focused-node-stroke-color);
+  --selected-node-background: var(--focused-node-background);
+  --node-content-width: 180px;
+  --node-content-height: 1em;
+  --node-width: calc(var(--node-content-width) + 2 * var(--graph-space));
+  --node-height: calc(2 * var(--node-padding) + 2 * var(--stroke-width) + var(--node-content-height));
+  --branch-stroke-color: var(--node-stroke-color);
+  --stroke-width: 1px;
+  --border-radius: 12px;
+  --children-indicator-min-height: 6px;
+  --children-indicator-offset: 6px;
+
+  box-sizing: border-box;
+}
+
+.graph * {
+  box-sizing: inherit;
+}
+
+.branch {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  user-select: none;
+}
+
+.branch:not(:last-of-type):not(.root):before {
+  content: "";
+  position: absolute;
+  width: var(--stroke-width);
+  background: var(--branch-stroke-color);
+  top: 0;
+  bottom: 0;
+}
+
+.node {
+  width: var(--node-width);
+  position: relative;
+  display: flex;
+  align-items: center;
+  line-height: 1;
+  margin-bottom: var(--graph-space);
+  margin-right: calc(-1 * var(--stroke-width));
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--text-color);
+  background: var(--node-background);
+  flex-shrink: 0;
+}
+
+.node:focus,
+.node:focus-within {
+  outline: 0;
+  --node-stroke-color: var(--focused-node-stroke-color);
+}
+
+.node:focus > .node-content {
+  background-color: var(--focused-node-background);
+}
+
+.branch.root > .node {
+  margin-left: calc(var(--graph-space) * -1);
+}
+
+.branch.selected > .node > .node-content {
+  border-color: var(--selected-node-stroke-color);
+  background: var(--selected-node-background);
+}
+
+.node:not(.leaf) {
+  cursor: pointer;
+}
+
+.branch:last-of-type > .node {
+  margin-bottom: 0;
+}
+
+.node-children {
+  display: grid;
+  padding-top: var(--node-height);
+}
+
+.node-content {
+  border-radius: var(--border-radius);
+  border: var(--stroke-width) solid var(--node-stroke-color);
+  margin-left: var(--graph-space);
+  padding: var(--node-padding);
+  width: var(--node-content-width);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.node > .children-indicator {
+  width: var(--stroke-width);
+  background-color: var(--branch-stroke-color);
+  position: absolute;
+  top: var(--border-radius);
+  bottom: var(--border-radius);
+  right: calc(var(--graph-space) - var(--children-indicator-offset));
+  min-height: var(--children-indicator-min-height);
+}
+
+.node > .link {
+  width: var(--graph-space);
+  position: absolute;
+  border-width: 0;
+  border-color: var(--branch-stroke-color);
+  border-style: solid;
+}
+
+.node > .link.to-parent {
+  border-left-width: var(--stroke-width);
+  border-bottom-width: var(--stroke-width);
+  border-bottom-left-radius: var(--border-radius);
+  top: 0;
+  left: 0;
+  bottom: calc(50% - var(--stroke-width) / 2);
+}
+
+.node > .link.to-children {
+  border-right-width: var(--stroke-width);
+  border-top-width: var(--stroke-width);
+  border-top-right-radius: var(--border-radius);
+  top: calc(50% - var(--stroke-width) / 2);
+  right: 0;
+  bottom: 0;
+}
+
+.branch.root > .node > .link.to-parent,
+.node.leaf > .link.to-children {
+  display: none;
+}
