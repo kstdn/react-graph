@@ -95,6 +95,7 @@
   margin-left: var(--graph-space);
   padding: var(--node-padding);
   width: var(--node-content-width);
+  height: var(--node-height);
   text-overflow: ellipsis;
   white-space: nowrap;
   overflow: hidden;

@@ -1,17 +1,19 @@
 import React, {
   FunctionComponent,
+  ReactNode,
   SyntheticEvent,
   useContext,
   useEffect,
   useState,
-  ReactNode,
 } from 'react';
 import { getExpandedContext } from '../../context/ExpandedContext';
 import { getNodesContext } from '../../context/NodesContext';
 import { GraphNodeDef } from '../../models/GraphNodeDef';
-import { LoadingStatus } from './../../util';
-import { preventUndesiredEventHandling } from './util';
 import styles from './../../styles.module.css';
+import { LoadingStatus } from './../../util';
+import Indicators from './Indicators';
+import NodeContent from './NodeContent';
+import { preventUndesiredEventHandling } from './util';
 
 type Props<TId> = {
   /**
@@ -137,21 +139,15 @@ function GraphNode<TId extends string | number>({
         className={`${styles.node}${leaf ? ` ${styles.leaf}` : ''}`}
       >
         <div className={`${styles['link']} ${styles['to-parent']}`}></div>
-        <div className={styles['node-content']}>
+        <NodeContent>
           {nodeContent ? nodeContent(node) : node.name}
-        </div>
-        {childrenCount > 0 &&
-          (childrenStatus === LoadingStatus.Loading ? (
-            <div className={styles['children-loading-indicator']}>
-              {childrenLoadingIndicator
-                ? childrenLoadingIndicator
-                : 'Loading...'}
-            </div>
-          ) : expanded ? (
-            <div className={`${styles['link']} ${styles['to-children']}`}></div>
-          ) : (
-            <div className={`${styles['children-indicator']}`}></div>
-          ))}
+        </NodeContent>
+        <Indicators
+          childrenCount={childrenCount}
+          childrenStatus={childrenStatus}
+          childrenLoadingIndicator={childrenLoadingIndicator}
+          expanded={expanded}
+        />
       </div>
       {expanded && childrenStatus === LoadingStatus.Resolved && nodeChildren}
     </div>
