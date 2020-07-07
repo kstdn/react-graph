@@ -110,6 +110,11 @@
   min-height: var(--children-indicator-min-height);
 }
 
+.node > .children-loading-indicator {
+  position: absolute;
+  left: 100%;
+}
+
 .node > .link {
   width: var(--graph-space);
   position: absolute;

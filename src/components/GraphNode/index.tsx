@@ -1,7 +1,15 @@
-import React, { FunctionComponent, SyntheticEvent, useContext } from 'react';
+import React, {
+  FunctionComponent,
+  SyntheticEvent,
+  useContext,
+  useEffect,
+  useState,
+  ReactNode,
+} from 'react';
 import { getExpandedContext } from '../../context/ExpandedContext';
 import { getNodesContext } from '../../context/NodesContext';
 import { GraphNodeDef } from '../../models/GraphNodeDef';
+import { LoadingStatus } from './../../util';
 import { preventUndesiredEventHandling } from './util';
 import styles from './../../styles.module.css';
 
@@ -37,6 +45,14 @@ type Props<TId> = {
    */
   readOnly: boolean;
 
+  /**
+   * Element to be displayed while loading children
+   */
+  childrenLoadingIndicator?: ReactNode;
+
+  /**
+   * Node click callback
+   */
   onNodeClick?: (node: GraphNodeDef<TId>) => any;
 };
 
@@ -47,6 +63,7 @@ function GraphNode<TId extends string | number>({
   readOnly,
   nodeContent,
   isSelected,
+  childrenLoadingIndicator,
   onNodeClick,
 }: Props<TId>) {
   const { getNode, loadNodesAsync } = useContext(getNodesContext<TId>());
@@ -100,6 +117,7 @@ function GraphNode<TId extends string | number>({
             isSelected={isSelected}
             nodeContent={nodeContent}
             readOnly={readOnly}
+            childrenLoadingIndicator={childrenLoadingIndicator}
             onNodeClick={onNodeClick}
           />
         ))}
@@ -123,13 +141,19 @@ function GraphNode<TId extends string | number>({
           {nodeContent ? nodeContent(node) : node.name}
         </div>
         {childrenCount > 0 &&
-          (expanded ? (
+          (childrenStatus === LoadingStatus.Loading ? (
+            <div className={styles['children-loading-indicator']}>
+              {childrenLoadingIndicator
+                ? childrenLoadingIndicator
+                : 'Loading...'}
+            </div>
+          ) : expanded ? (
             <div className={`${styles['link']} ${styles['to-children']}`}></div>
           ) : (
-            <div className={styles['children-indicator']}></div>
+            <div className={`${styles['children-indicator']}`}></div>
           ))}
       </div>
-      {expanded && nodeChildren}
+      {expanded && childrenStatus === LoadingStatus.Resolved && nodeChildren}
     </div>
   );
 }

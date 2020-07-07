@@ -1,4 +1,4 @@
-import React, { FunctionComponent, useState } from 'react';
+import React, { FunctionComponent, ReactNode, useState } from 'react';
 import GraphNode from './components/GraphNode';
 import Providers from './context/Providers';
 import { GraphNodeDef } from './models/GraphNodeDef';
@@ -46,6 +46,11 @@ type Props<TId> = {
   onNodeSelected?: (node: GraphNodeDef<TId>) => any;
 
   /**
+   * Element to be displayed while loading children
+   */
+  childrenLoadingIndicator?: ReactNode;
+
+  /**
    * Function to be used for loading new nodes into memory
    */
   loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
@@ -59,6 +64,7 @@ function Graph<TId extends string | number>({
   persistExpandedState = false,
   onNodeClicked,
   onNodeSelected,
+  childrenLoadingIndicator,
   loadNodesAsyncFunc,
 }: Props<TId>) {
   const [selectedNode, setSelectedNode] = useState<GraphNodeDef<TId>>();
@@ -92,6 +98,7 @@ function Graph<TId extends string | number>({
           isRoot
           readOnly={false}
           isSelected={isSelected}
+          childrenLoadingIndicator={childrenLoadingIndicator}
           onNodeClick={handleNodeClick}
         />
       </div>
