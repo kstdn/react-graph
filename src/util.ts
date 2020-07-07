@@ -23,3 +23,10 @@ export const mapPropsToStyle = (props: GraphStyleProps = {}): CSSProperties => {
     ["--children-indicator-offset" as any]: props.childrenIndicatorOffset,
   };
 };
+
+export enum LoadingStatus {
+  Idle = 'Idle',
+  Loading = 'Loading',
+  Resolved = 'Resolved',
+  Rejected = 'Rejected',
+}

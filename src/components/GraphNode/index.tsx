@@ -49,10 +49,26 @@ function GraphNode<TId extends string | number>({
   isSelected,
   onNodeClick,
 }: Props<TId>) {
-  const { getNode } = useContext(getNodesContext<TId>());
+  const { getNode, loadNodesAsync } = useContext(getNodesContext<TId>());
   const { isExpanded, onExpandToggled } = useContext(getExpandedContext<TId>());
+  const [childrenStatus, setChildrenStatus] = useState<LoadingStatus>(
+    LoadingStatus.Idle
+  );
 
   const node = getNode(nodeId);
+
+  useEffect(() => {
+    if (
+      node &&
+      node.childrenIds.length &&
+      childrenStatus === LoadingStatus.Idle
+    ) {
+      setChildrenStatus(LoadingStatus.Loading);
+      loadNodesAsync(node.childrenIds)
+        .then(() => setChildrenStatus(LoadingStatus.Resolved))
+        .catch(() => setChildrenStatus(LoadingStatus.Rejected));
+    }
+  }, [node, childrenStatus]);
 
   if (!node) return null;
 
@@ -65,7 +81,9 @@ function GraphNode<TId extends string | number>({
 
   const handleNodeInteraction = (e: SyntheticEvent) => {
     preventUndesiredEventHandling(e, () => {
-      onExpandToggled(path);
+      if (childrenStatus === LoadingStatus.Resolved) {
+        onExpandToggled(path);
+      }
       onNodeClick && onNodeClick(node);
     });
   };

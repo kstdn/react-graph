@@ -44,6 +44,11 @@ type Props<TId> = {
    * Note: Will not fire after a click on an already selected node
    */
   onNodeSelected?: (node: GraphNodeDef<TId>) => any;
+
+  /**
+   * Function to be used for loading new nodes into memory
+   */
+  loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
 };
 
 function Graph<TId extends string | number>({
@@ -54,6 +59,7 @@ function Graph<TId extends string | number>({
   persistExpandedState = false,
   onNodeClicked,
   onNodeSelected,
+  loadNodesAsyncFunc,
 }: Props<TId>) {
   const [selectedNode, setSelectedNode] = useState<GraphNodeDef<TId>>();
 
@@ -64,7 +70,7 @@ function Graph<TId extends string | number>({
   const handleNodeClick = (node: GraphNodeDef<TId>) => {
     // Handle click
     onNodeClicked && onNodeClicked(node);
-    
+
     // Handle selection
     if (!isSelected(node.id)) {
       onNodeSelected && onNodeSelected(node);
@@ -73,7 +79,11 @@ function Graph<TId extends string | number>({
   };
 
   return (
-    <Providers nodes={nodes} persistExpandedState={persistExpandedState}>
+    <Providers
+      nodes={nodes}
+      persistExpandedState={persistExpandedState}
+      loadNodesAsyncFunc={loadNodesAsyncFunc}
+    >
       <div className={styles['graph']} style={mapPropsToStyle(graphStyles)}>
         <GraphNode
           nodeContent={nodeContent}

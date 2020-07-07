@@ -16,12 +16,14 @@ type Props<TId> = {
   // onNodeSelected: (nodeId: TId | undefined) => any;
   persistExpandedState: boolean;
   children: ReactNode;
+  loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
 };
 
 export function Providers<TId>({
   nodes,
   persistExpandedState,
   children,
+  loadNodesAsyncFunc,
 }: Props<TId>) {
   const [expandedGraph, setExpandedGraph] = useState<ExpandedGraphNode<TId>[]>(
     persistExpandedState
@@ -54,6 +56,24 @@ export function Providers<TId>({
   const NodesContext = getNodesContext<TId>();
   const ExpandedContext = getExpandedContext<TId>();
 
+  const getNode = (id: TId) => {
+    return nodes.get(id);
+  };
+
+  const loadNodesAsync = (childrenIds: TId[]): Promise<any> => {
+    const toLoad = childrenIds.filter(id => !nodes.has(id));
+
+    if (toLoad.length === 0) {
+      return Promise.resolve([]);
+    }
+
+    return loadNodesAsyncFunc
+      ? loadNodesAsyncFunc(toLoad).then(result => {
+          result.forEach(node => nodes.set(node.id, node))
+        })
+      : Promise.resolve([]);
+  };
+
   return (
     // <SelectedNodeContext.Provider
     //   value={{
@@ -65,7 +85,8 @@ export function Providers<TId>({
       <NodesContext.Provider
         value={{
           nodes,
-          getNode: (id: TId) => nodes.get(id),
+          getNode,
+          loadNodesAsync,
         }}
       >
         <ExpandedContext.Provider
