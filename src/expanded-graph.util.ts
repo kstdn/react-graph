@@ -4,7 +4,7 @@ export class ExpandedGraphNode<T> {
 
 const copy = <T>(nodes: ExpandedGraphNode<T>[]): ExpandedGraphNode<T>[] => {
   return nodes.map(
-    (node) => new ExpandedGraphNode(node.value, copy(node.children))
+    node => new ExpandedGraphNode(node.value, copy(node.children))
   );
 };
 
@@ -13,7 +13,7 @@ export const isExpanded = <TId>(
   expandedGraph: ExpandedGraphNode<TId>[]
 ): boolean => {
   if (path.length === 0) {
-    throw new Error("Path Not Valid");
+    throw new Error('Path Not Valid');
   }
 
   let currentLevel: ExpandedGraphNode<TId>[] = expandedGraph;
@@ -21,7 +21,7 @@ export const isExpanded = <TId>(
   let index = 0;
   while (index < path.length) {
     const segment = path[index];
-    const found = currentLevel.find((s) => s.value === segment);
+    const found = currentLevel.find(s => s.value === segment);
     if (found) {
       currentLevel = found.children;
     } else {
@@ -51,14 +51,14 @@ export const expandPath = <TId>(
   expandedGraph: ExpandedGraphNode<TId>[]
 ): ExpandedGraphNode<TId>[] => {
   if (path.length === 0) {
-    throw new Error("Path Not Valid");
+    throw new Error('Path Not Valid');
   }
 
   const expandedGraphCopy: ExpandedGraphNode<TId>[] = copy(expandedGraph);
   let currentLevel = expandedGraphCopy;
 
   for (const pathSegment of path) {
-    const found = currentLevel.find((node) => node.value === pathSegment);
+    const found = currentLevel.find(node => node.value === pathSegment);
     if (found) {
       currentLevel = found.children;
     } else {
@@ -76,7 +76,7 @@ export const collapseLastNodeOfPath = <TId>(
   expandedGraph: ExpandedGraphNode<TId>[]
 ): ExpandedGraphNode<TId>[] => {
   if (path.length <= 0) {
-    throw new Error("Path Not Valid");
+    throw new Error('Path Not Valid');
   }
 
   const expandedGraphCopy: ExpandedGraphNode<TId>[] = copy(expandedGraph);
@@ -87,7 +87,7 @@ export const collapseLastNodeOfPath = <TId>(
   while (pathSegmentsLeft > 0) {
     const i = path.length - pathSegmentsLeft;
     const pathSegment = path[i];
-    const found = currentLevel.find((node) => node.value === pathSegment);
+    const found = currentLevel.find(node => node.value === pathSegment);
 
     if (found) {
       if (pathSegmentsLeft > 1) {
@@ -109,3 +109,13 @@ export const collapseLastNodeOfPath = <TId>(
 
   return expandedGraphCopy;
 };
+
+const getAllNodeIds = <TId>(expandedGraph: ExpandedGraphNode<TId>[]): TId[] =>
+  expandedGraph.reduce<TId[]>(
+    (prev, curr) => [...prev, curr.value, ...getAllNodeIds(curr.children)],
+    []
+  );
+
+export const getAllUniqueNodeIds = <TId>(
+  expandedGraph: ExpandedGraphNode<TId>[]
+): TId[] => Array.from(new Set(getAllNodeIds(expandedGraph)));
