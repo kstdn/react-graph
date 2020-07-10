@@ -1,7 +1,6 @@
 import React, {
   FunctionComponent,
   ReactNode,
-  SyntheticEvent,
   useContext,
   useEffect,
   useState,
@@ -9,11 +8,10 @@ import React, {
 import { getExpandedContext } from '../../context/ExpandedContext';
 import { getNodesContext } from '../../context/NodesContext';
 import { GraphNodeDef } from '../../models/GraphNodeDef';
-import styles from './../../styles.module.css';
+import Level from '../Presentation/Level';
+import LoadingLevel from '../Presentation/LoadingBranch';
+import NodeChildren from '../Presentation/NodeChildren';
 import { LoadingStatus } from './../../util';
-import Indicators from './Indicators';
-import NodeContent from './NodeContent';
-import { preventUndesiredEventHandling } from './util';
 
 type Props<TId> = {
   /**
@@ -43,11 +41,6 @@ type Props<TId> = {
   isSelected?: (nodeId: TId) => boolean;
 
   /**
-   * If a node is readonly we cannot add children to it
-   */
-  readOnly: boolean;
-
-  /**
    * Element to be displayed while loading children
    */
   childrenLoadingIndicator?: ReactNode;
@@ -62,7 +55,6 @@ function GraphNode<TId extends string | number>({
   nodeId,
   parentPath,
   isRoot,
-  readOnly,
   nodeContent,
   isSelected,
   childrenLoadingIndicator,
@@ -77,17 +69,19 @@ function GraphNode<TId extends string | number>({
   const node = getNode(nodeId);
 
   useEffect(() => {
-    if (
-      node &&
-      node.childrenIds.length &&
-      childrenStatus === LoadingStatus.Idle
-    ) {
+    let isCanceled = false;
+
+    if (node && node.childrenIds.length) {
       setChildrenStatus(LoadingStatus.Loading);
       loadNodesAsync(node.childrenIds)
-        .then(() => setChildrenStatus(LoadingStatus.Resolved))
-        .catch(() => setChildrenStatus(LoadingStatus.Rejected));
+        .then(() => !isCanceled && setChildrenStatus(LoadingStatus.Resolved))
+        .catch(() => !isCanceled && setChildrenStatus(LoadingStatus.Rejected));
     }
-  }, [node, childrenStatus]);
+
+    return () => {
+      isCanceled = true;
+    };
+  }, [node]);
 
   if (!node) return null;
 
@@ -96,61 +90,46 @@ function GraphNode<TId extends string | number>({
   const selected = isSelected && isSelected(node.id);
 
   const childrenCount = node.childrenIds.length;
+  const hasChildren = childrenCount > 0;
   const leaf = childrenCount === 0;
 
-  const handleNodeInteraction = (e: SyntheticEvent) => {
-    preventUndesiredEventHandling(e, () => {
-      if (childrenStatus === LoadingStatus.Resolved) {
-        onExpandToggled(path);
-      }
-      onNodeClick && onNodeClick(node);
-    });
+  const handleNodeInteraction = () => {
+    onExpandToggled(path);
   };
 
   const nodeChildren = (
-    <div className={styles['node-children']}>
-      {childrenCount > 0 &&
-        node.childrenIds.map(nodeId => (
-          <GraphNode
-            key={nodeId}
-            nodeId={nodeId}
-            parentPath={path}
-            isRoot={false}
-            isSelected={isSelected}
-            nodeContent={nodeContent}
-            readOnly={readOnly}
-            childrenLoadingIndicator={childrenLoadingIndicator}
-            onNodeClick={onNodeClick}
-          />
-        ))}
-    </div>
+    <NodeChildren>
+      {hasChildren &&
+        node.childrenIds.map(nodeId =>
+          childrenStatus === LoadingStatus.Loading ? (
+            <LoadingLevel key={nodeId} loadingIndicator={childrenLoadingIndicator}/>
+          ) : (
+            <GraphNode
+              key={nodeId}
+              nodeId={nodeId}
+              parentPath={path}
+              isRoot={false}
+              isSelected={isSelected}
+              nodeContent={nodeContent}
+              childrenLoadingIndicator={childrenLoadingIndicator}
+              onNodeClick={onNodeClick}
+            />
+          )
+        )}
+    </NodeChildren>
   );
 
   return (
-    <div
-      className={`${styles['branch']}${isRoot ? ` ${styles['root']}` : ''}${
-        selected ? ` ${styles['selected']}` : ''
-      }`}
-    >
-      <div
-        tabIndex={0}
-        onClick={handleNodeInteraction}
-        onKeyDown={handleNodeInteraction}
-        className={`${styles.node}${leaf ? ` ${styles.leaf}` : ''}`}
-      >
-        <div className={`${styles['link']} ${styles['to-parent']}`}></div>
-        <NodeContent>
-          {nodeContent ? nodeContent(node) : node.name}
-        </NodeContent>
-        <Indicators
-          childrenCount={childrenCount}
-          childrenStatus={childrenStatus}
-          childrenLoadingIndicator={childrenLoadingIndicator}
-          expanded={expanded}
-        />
-      </div>
-      {expanded && childrenStatus === LoadingStatus.Resolved && nodeChildren}
-    </div>
+    <Level
+      nodeContent={nodeContent ? nodeContent : node.name}
+      isRoot={isRoot}
+      isLeaf={leaf}
+      isSelected={!!selected}
+      isExpanded={expanded}
+      onNodeClick={handleNodeInteraction}
+      hasChildren={childrenCount > 0}
+      nodeChildren={nodeChildren}
+    />
   );
 }
 
