@@ -96,7 +96,6 @@ function Graph<TId extends string | number>({
           parentPath={[]}
           nodeId={rootNodeId}
           isRoot
-          readOnly={false}
           isSelected={isSelected}
           childrenLoadingIndicator={childrenLoadingIndicator}
           onNodeClick={handleNodeClick}
