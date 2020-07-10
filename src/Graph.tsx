@@ -1,10 +1,19 @@
-import React, { FunctionComponent, ReactNode, useState } from 'react';
+import React, {
+  FunctionComponent,
+  ReactNode,
+  useEffect,
+  useState,
+} from 'react';
 import GraphNode from './components/GraphNode';
+import LoadingRoot from './components/Presentation/LoadingRoot';
 import Providers from './context/Providers';
+import { ExpandedGraphNode, getAllUniqueNodeIds } from './expanded-graph.util';
 import { GraphNodeDef } from './models/GraphNodeDef';
 import { GraphStyleProps } from './models/GraphStyleProps';
 import styles from './styles.module.css';
 import { mapPropsToStyle } from './util';
+
+const expandedStateKey = 'expanded-state';
 
 type Props<TId> = {
   /**
@@ -48,12 +57,18 @@ type Props<TId> = {
   /**
    * Element to be displayed while loading children
    */
-  childrenLoadingIndicator?: ReactNode;
+  loadingIndicator?: ReactNode;
 
   /**
    * Function to be used for loading new nodes into memory
    */
   loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
+
+  /**
+   * Should all expanded nodes be preloaded at once
+   * using loadNodesAsyncFunc
+   */
+  preloadExpandedNodes?: boolean;
 };
 
 function Graph<TId extends string | number>({
@@ -64,10 +79,41 @@ function Graph<TId extends string | number>({
   persistExpandedState = false,
   onNodeClicked,
   onNodeSelected,
-  childrenLoadingIndicator,
+  loadingIndicator,
   loadNodesAsyncFunc,
+  preloadExpandedNodes = true,
 }: Props<TId>) {
   const [selectedNode, setSelectedNode] = useState<GraphNodeDef<TId>>();
+  const [expandedGraph, setExpandedGraph] = useState<ExpandedGraphNode<TId>[]>(
+    persistExpandedState
+      ? JSON.parse(localStorage.getItem(expandedStateKey) ?? '[]')
+      : []
+  );
+  const [loading, setLoading] = useState(preloadExpandedNodes ? true : false);
+
+  const loadNodesFunc = (toLoad: TId[]): Promise<void> =>
+    loadNodesAsyncFunc
+      ? loadNodesAsyncFunc(toLoad).then(result => {
+          result.forEach(node => nodes.set(node.id, node));
+        })
+      : Promise.resolve();
+
+  useEffect(() => {
+    let isCanceled = false;
+
+    if (preloadExpandedNodes && !isCanceled) {
+      const allUniquesIds = getAllUniqueNodeIds(expandedGraph);
+      if (!allUniquesIds.length) {
+        setLoading(false);
+      } else {
+        loadNodesFunc(allUniquesIds).then(() => setLoading(false));
+      }
+    }
+
+    return () => {
+      isCanceled = true;
+    };
+  }, []);
 
   const isSelected = (nodeId: TId) => {
     return !!(selectedNode && nodeId === selectedNode.id);
@@ -88,18 +134,25 @@ function Graph<TId extends string | number>({
     <Providers
       nodes={nodes}
       persistExpandedState={persistExpandedState}
-      loadNodesAsyncFunc={loadNodesAsyncFunc}
+      loadNodesAsyncFunc={loadNodesFunc}
+      expandedStateKey={expandedStateKey}
+      expandedGraph={expandedGraph}
+      setExpandedGraph={setExpandedGraph}
     >
       <div className={styles['graph']} style={mapPropsToStyle(graphStyles)}>
-        <GraphNode
-          nodeContent={nodeContent}
-          parentPath={[]}
-          nodeId={rootNodeId}
-          isRoot
-          isSelected={isSelected}
-          childrenLoadingIndicator={childrenLoadingIndicator}
-          onNodeClick={handleNodeClick}
-        />
+        {loading ? (
+          <LoadingRoot loadingIndicator={loadingIndicator} />
+        ) : (
+          <GraphNode
+            nodeContent={nodeContent}
+            parentPath={[]}
+            nodeId={rootNodeId}
+            isRoot
+            isSelected={isSelected}
+            childrenLoadingIndicator={loadingIndicator}
+            onNodeClick={handleNodeClick}
+          />
+        )}
       </div>
     </Providers>
   );

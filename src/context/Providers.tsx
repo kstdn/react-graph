@@ -1,20 +1,21 @@
-import React, { ReactNode, useState } from 'react';
+import React, { Dispatch, ReactNode, SetStateAction } from 'react';
 import {
   ExpandedGraphNode,
   isExpanded,
-  togglePath,
+  togglePath
 } from '../expanded-graph.util';
 import { GraphNodeDef } from '../models/GraphNodeDef';
 import { getExpandedContext } from './ExpandedContext';
 import { getNodesContext } from './NodesContext';
 
-const expandedStateKey = 'expanded-state';
-
 type Props<TId> = {
   nodes: Map<TId, GraphNodeDef<TId>>;
   persistExpandedState: boolean;
   children: ReactNode;
-  loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
+  loadNodesAsyncFunc: (ids: TId[]) => Promise<void>;
+  expandedStateKey: string;
+  expandedGraph: ExpandedGraphNode<TId>[];
+  setExpandedGraph: Dispatch<SetStateAction<ExpandedGraphNode<TId>[]>>;
 };
 
 export function Providers<TId>({
@@ -22,12 +23,10 @@ export function Providers<TId>({
   persistExpandedState,
   children,
   loadNodesAsyncFunc,
+  expandedStateKey,
+  expandedGraph,
+  setExpandedGraph,
 }: Props<TId>) {
-  const [expandedGraph, setExpandedGraph] = useState<ExpandedGraphNode<TId>[]>(
-    persistExpandedState
-      ? JSON.parse(localStorage.getItem(expandedStateKey) ?? '[]')
-      : []
-  );
 
   const onExpandToggled = (path: TId[]) => {
     const updatedExpandedGraph = togglePath(path, expandedGraph);
@@ -53,11 +52,7 @@ export function Providers<TId>({
       return Promise.resolve([]);
     }
 
-    return loadNodesAsyncFunc
-      ? loadNodesAsyncFunc(toLoad).then(result => {
-          result.forEach(node => nodes.set(node.id, node));
-        })
-      : Promise.resolve([]);
+    return loadNodesAsyncFunc(childrenIds);
   };
 
   return (

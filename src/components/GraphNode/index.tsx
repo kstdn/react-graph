@@ -9,7 +9,7 @@ import { getExpandedContext } from '../../context/ExpandedContext';
 import { getNodesContext } from '../../context/NodesContext';
 import { GraphNodeDef } from '../../models/GraphNodeDef';
 import Level from '../Presentation/Level';
-import LoadingLevel from '../Presentation/LoadingBranch';
+import LoadingLevel from '../Presentation/LoadingLevel';
 import NodeChildren from '../Presentation/NodeChildren';
 import { LoadingStatus } from './../../util';
 
@@ -63,7 +63,7 @@ function GraphNode<TId extends string | number>({
   const { getNode, loadNodesAsync } = useContext(getNodesContext<TId>());
   const { isExpanded, onExpandToggled } = useContext(getExpandedContext<TId>());
   const [childrenStatus, setChildrenStatus] = useState<LoadingStatus>(
-    LoadingStatus.Idle
+    LoadingStatus.Loading
   );
 
   const node = getNode(nodeId);
