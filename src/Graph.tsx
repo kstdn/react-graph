@@ -7,11 +7,11 @@ import React, {
 import GraphNode from './components/GraphNode';
 import LoadingRoot from './components/Presentation/LoadingRoot';
 import Providers from './context/Providers';
-import { VisibleGraphNode, getAllUniqueNodeIds } from './visible-graph.util';
 import { GraphNodeDef } from './models/GraphNodeDef';
 import { GraphStyleProps } from './models/GraphStyleProps';
 import styles from './styles.module.css';
 import { mapPropsToStyle } from './util';
+import { getAllUniqueNodeIds, VisibleGraphNode } from './visible-graph.util';
 
 const visibleStateKey = 'visible-state';
 
@@ -91,12 +91,19 @@ function Graph<TId extends string | number>({
   );
   const [loading, setLoading] = useState(preloadVisibleNodes ? true : false);
 
-  const loadNodesFunc = (toLoad: TId[]): Promise<void> =>
-    loadNodesAsyncFunc
+  const loadNodesFunc = (childrenIds: TId[]): Promise<void> => {
+    const toLoad = childrenIds.filter(id => !nodes.has(id));
+
+    if (toLoad.length === 0) {
+      return Promise.resolve();
+    }
+
+    return loadNodesAsyncFunc
       ? loadNodesAsyncFunc(toLoad).then(result => {
           result.forEach(node => nodes.set(node.id, node));
         })
       : Promise.resolve();
+  };
 
   useEffect(() => {
     let isCanceled = false;

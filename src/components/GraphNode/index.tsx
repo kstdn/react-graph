@@ -63,15 +63,18 @@ function GraphNode<TId extends string | number>({
   const { getNode, loadNodesAsync } = useContext(getNodesContext<TId>());
   const { areChildrenVisible, onVisibilityToggled } = useContext(getVisibleContext<TId>());
   const [childrenStatus, setChildrenStatus] = useState<LoadingStatus>(
-    LoadingStatus.Loading
+    LoadingStatus.Idle
   );
 
   const node = getNode(nodeId);
+  const path = node ? [...parentPath, node.id] : [];
+  const childrenVisible = node ? areChildrenVisible(path, node.childrenIds) : false;
+  const selected = node && (isSelected && isSelected(node.id));
 
   useEffect(() => {
     let isCanceled = false;
 
-    if (node && node.childrenIds.length) {
+    if (node && node.childrenIds.length && childrenVisible) {
       setChildrenStatus(LoadingStatus.Loading);
       loadNodesAsync(node.childrenIds)
         .then(() => !isCanceled && setChildrenStatus(LoadingStatus.Resolved))
@@ -81,13 +84,11 @@ function GraphNode<TId extends string | number>({
     return () => {
       isCanceled = true;
     };
-  }, [node]);
+  }, [node, childrenVisible]);
 
   if (!node) return null;
 
-  const path = [...parentPath, node.id];
-  const childrenVisible = areChildrenVisible(path, node.childrenIds);
-  const selected = isSelected && isSelected(node.id);
+
 
   const childrenCount = node.childrenIds.length;
   const hasChildren = childrenCount > 0;

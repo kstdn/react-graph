@@ -45,22 +45,12 @@ export function Providers<TId>({
     return nodes.get(id);
   };
 
-  const loadNodesAsync = (childrenIds: TId[]): Promise<any> => {
-    const toLoad = childrenIds.filter(id => !nodes.has(id));
-
-    if (toLoad.length === 0) {
-      return Promise.resolve([]);
-    }
-
-    return loadNodesAsyncFunc(childrenIds);
-  };
-
   return (
     <NodesContext.Provider
       value={{
         nodes,
         getNode,
-        loadNodesAsync,
+        loadNodesAsync: loadNodesAsyncFunc,
       }}
     >
       <VisibleContext.Provider
