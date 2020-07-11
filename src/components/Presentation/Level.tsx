@@ -28,9 +28,9 @@ type Props = {
   isSelected?: boolean;
 
   /**
-   * Is this node expanded
+   * Are this node's children visible
    */
-  isExpanded?: boolean;
+  areChildrenVisible?: boolean;
 
   /**
    * Node click callback
@@ -53,7 +53,7 @@ function Level({
   isRoot,
   isLeaf,
   isSelected,
-  isExpanded,
+  areChildrenVisible,
   onNodeClick,
   hasChildren,
   nodeChildren,
@@ -74,9 +74,9 @@ function Level({
       >
         <IndicatorsBefore />
         <Node>{nodeContent}</Node>
-        <IndicatorsAfter hasChildren={hasChildren} isExpanded={isExpanded} />
+        <IndicatorsAfter hasChildren={hasChildren} areChildrenVisible={areChildrenVisible} />
       </NodeContainer>
-      {isExpanded && nodeChildren}
+      {areChildrenVisible && nodeChildren}
     </Branch>
   );
 }

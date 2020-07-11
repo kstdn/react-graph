@@ -7,13 +7,13 @@ import React, {
 import GraphNode from './components/GraphNode';
 import LoadingRoot from './components/Presentation/LoadingRoot';
 import Providers from './context/Providers';
-import { ExpandedGraphNode, getAllUniqueNodeIds } from './expanded-graph.util';
+import { VisibleGraphNode, getAllUniqueNodeIds } from './visible-graph.util';
 import { GraphNodeDef } from './models/GraphNodeDef';
 import { GraphStyleProps } from './models/GraphStyleProps';
 import styles from './styles.module.css';
 import { mapPropsToStyle } from './util';
 
-const expandedStateKey = 'expanded-state';
+const visibleStateKey = 'visible-state';
 
 type Props<TId> = {
   /**
@@ -40,10 +40,10 @@ type Props<TId> = {
    */
   graphStyles?: GraphStyleProps;
   /**
-   * Should state of the expanded nodes be persisted in localStorage
+   * Should state of the visible nodes be persisted in localStorage
    * and reloaded automatically
    */
-  persistExpandedState?: boolean;
+  persistVisibleState?: boolean;
   /**
    * Fired after a node has been clicked
    */
@@ -65,10 +65,10 @@ type Props<TId> = {
   loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
 
   /**
-   * Should all expanded nodes be preloaded at once
+   * Should all visible nodes be preloaded at once
    * using loadNodesAsyncFunc
    */
-  preloadExpandedNodes?: boolean;
+  preloadVisibleNodes?: boolean;
 };
 
 function Graph<TId extends string | number>({
@@ -76,20 +76,20 @@ function Graph<TId extends string | number>({
   nodes,
   nodeContent,
   graphStyles,
-  persistExpandedState = false,
+  persistVisibleState = false,
   onNodeClicked,
   onNodeSelected,
   loadingIndicator,
   loadNodesAsyncFunc,
-  preloadExpandedNodes = true,
+  preloadVisibleNodes = true,
 }: Props<TId>) {
   const [selectedNode, setSelectedNode] = useState<GraphNodeDef<TId>>();
-  const [expandedGraph, setExpandedGraph] = useState<ExpandedGraphNode<TId>[]>(
-    persistExpandedState
-      ? JSON.parse(localStorage.getItem(expandedStateKey) ?? '[]')
+  const [visibleGraph, setVisibleGraph] = useState<VisibleGraphNode<TId>[]>(
+    persistVisibleState
+      ? JSON.parse(localStorage.getItem(visibleStateKey) ?? '[]')
       : []
   );
-  const [loading, setLoading] = useState(preloadExpandedNodes ? true : false);
+  const [loading, setLoading] = useState(preloadVisibleNodes ? true : false);
 
   const loadNodesFunc = (toLoad: TId[]): Promise<void> =>
     loadNodesAsyncFunc
@@ -101,8 +101,8 @@ function Graph<TId extends string | number>({
   useEffect(() => {
     let isCanceled = false;
 
-    if (preloadExpandedNodes && !isCanceled) {
-      const allUniquesIds = getAllUniqueNodeIds(expandedGraph);
+    if (preloadVisibleNodes && !isCanceled) {
+      const allUniquesIds = getAllUniqueNodeIds(visibleGraph);
       if (!allUniquesIds.length) {
         setLoading(false);
       } else {
@@ -133,11 +133,11 @@ function Graph<TId extends string | number>({
   return (
     <Providers
       nodes={nodes}
-      persistExpandedState={persistExpandedState}
+      persistVisibleState={persistVisibleState}
       loadNodesAsyncFunc={loadNodesFunc}
-      expandedStateKey={expandedStateKey}
-      expandedGraph={expandedGraph}
-      setExpandedGraph={setExpandedGraph}
+      visibleStateKey={visibleStateKey}
+      visibleGraph={visibleGraph}
+      setVisibleGraph={setVisibleGraph}
     >
       <div className={styles['graph']} style={mapPropsToStyle(graphStyles)}>
         {loading ? (

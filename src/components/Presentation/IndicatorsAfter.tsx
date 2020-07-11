@@ -3,12 +3,12 @@ import styles from './../../styles.module.css';
 
 type Props = {
   hasChildren?: boolean;
-  isExpanded?: boolean;
+  areChildrenVisible?: boolean;
 };
 
-const IndicatorsAfter = ({ hasChildren, isExpanded }: Props) => {
+const IndicatorsAfter = ({ hasChildren, areChildrenVisible }: Props) => {
   return hasChildren ? (
-    isExpanded ? (
+    areChildrenVisible ? (
       <div className={`${styles['link']} ${styles['to-children']}`}></div>
     ) : (
       <div className={`${styles['children-indicator']}`}></div>

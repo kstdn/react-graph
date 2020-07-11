@@ -5,7 +5,7 @@ import React, {
   useEffect,
   useState,
 } from 'react';
-import { getExpandedContext } from '../../context/ExpandedContext';
+import { getVisibleContext } from '../../context/VisibleContext';
 import { getNodesContext } from '../../context/NodesContext';
 import { GraphNodeDef } from '../../models/GraphNodeDef';
 import Level from '../Presentation/Level';
@@ -61,7 +61,7 @@ function GraphNode<TId extends string | number>({
   onNodeClick,
 }: Props<TId>) {
   const { getNode, loadNodesAsync } = useContext(getNodesContext<TId>());
-  const { isExpanded, onExpandToggled } = useContext(getExpandedContext<TId>());
+  const { areChildrenVisible, onVisibilityToggled } = useContext(getVisibleContext<TId>());
   const [childrenStatus, setChildrenStatus] = useState<LoadingStatus>(
     LoadingStatus.Loading
   );
@@ -86,7 +86,7 @@ function GraphNode<TId extends string | number>({
   if (!node) return null;
 
   const path = [...parentPath, node.id];
-  const expanded = isExpanded(path);
+  const childrenVisible = areChildrenVisible(path, node.childrenIds);
   const selected = isSelected && isSelected(node.id);
 
   const childrenCount = node.childrenIds.length;
@@ -94,7 +94,7 @@ function GraphNode<TId extends string | number>({
   const leaf = childrenCount === 0;
 
   const handleNodeInteraction = () => {
-    onExpandToggled(path);
+    onVisibilityToggled(path, node.childrenIds);
   };
 
   const nodeChildren = (
@@ -125,7 +125,7 @@ function GraphNode<TId extends string | number>({
       isRoot={isRoot}
       isLeaf={leaf}
       isSelected={!!selected}
-      isExpanded={expanded}
+      areChildrenVisible={childrenVisible}
       onNodeClick={handleNodeInteraction}
       hasChildren={childrenCount > 0}
       nodeChildren={nodeChildren}

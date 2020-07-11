@@ -12,7 +12,7 @@ const App = () => {
     <Graph
       rootNodeId={'1'}
       nodes={nodes}
-      persistExpandedState={true}
+      persistVisibleState={true}
       loadNodesAsyncFunc={getNodes}
       onNodeClicked={node => console.log('Clicked', node)}
       onNodeSelected={node => console.log('Selected', node)}

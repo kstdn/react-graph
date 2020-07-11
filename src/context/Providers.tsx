@@ -1,45 +1,45 @@
 import React, { Dispatch, ReactNode, SetStateAction } from 'react';
 import {
-  ExpandedGraphNode,
-  isExpanded,
-  togglePath
-} from '../expanded-graph.util';
+  VisibleGraphNode,
+  areChildrenVisible,
+  togglePathsVisibility
+} from '../visible-graph.util';
 import { GraphNodeDef } from '../models/GraphNodeDef';
-import { getExpandedContext } from './ExpandedContext';
+import { getVisibleContext } from './VisibleContext';
 import { getNodesContext } from './NodesContext';
 
 type Props<TId> = {
   nodes: Map<TId, GraphNodeDef<TId>>;
-  persistExpandedState: boolean;
+  persistVisibleState: boolean;
   children: ReactNode;
   loadNodesAsyncFunc: (ids: TId[]) => Promise<void>;
-  expandedStateKey: string;
-  expandedGraph: ExpandedGraphNode<TId>[];
-  setExpandedGraph: Dispatch<SetStateAction<ExpandedGraphNode<TId>[]>>;
+  visibleStateKey: string;
+  visibleGraph: VisibleGraphNode<TId>[];
+  setVisibleGraph: Dispatch<SetStateAction<VisibleGraphNode<TId>[]>>;
 };
 
 export function Providers<TId>({
   nodes,
-  persistExpandedState,
+  persistVisibleState,
   children,
   loadNodesAsyncFunc,
-  expandedStateKey,
-  expandedGraph,
-  setExpandedGraph,
+  visibleStateKey,
+  visibleGraph,
+  setVisibleGraph,
 }: Props<TId>) {
 
-  const onExpandToggled = (path: TId[]) => {
-    const updatedExpandedGraph = togglePath(path, expandedGraph);
-    if (persistExpandedState)
+  const onVisibilityToggled = (parentPath: TId[], childrenIds: TId[]) => {
+    const updatedVisibleGraph = togglePathsVisibility(parentPath, childrenIds, visibleGraph);
+    if (persistVisibleState)
       localStorage.setItem(
-        expandedStateKey,
-        JSON.stringify(updatedExpandedGraph)
+        visibleStateKey,
+        JSON.stringify(updatedVisibleGraph)
       );
-    setExpandedGraph(updatedExpandedGraph);
+    setVisibleGraph(updatedVisibleGraph);
   };
 
   const NodesContext = getNodesContext<TId>();
-  const ExpandedContext = getExpandedContext<TId>();
+  const VisibleContext = getVisibleContext<TId>();
 
   const getNode = (id: TId) => {
     return nodes.get(id);
@@ -63,15 +63,15 @@ export function Providers<TId>({
         loadNodesAsync,
       }}
     >
-      <ExpandedContext.Provider
+      <VisibleContext.Provider
         value={{
-          expandedGraph,
-          isExpanded: (path: TId[]) => isExpanded(path, expandedGraph),
-          onExpandToggled,
+          visibleGraph,
+          areChildrenVisible: (path: TId[], childrenIds: TId[]) => areChildrenVisible(path, childrenIds, visibleGraph),
+          onVisibilityToggled,
         }}
       >
         {children}
-      </ExpandedContext.Provider>
+      </VisibleContext.Provider>
     </NodesContext.Provider>
   );
 }
