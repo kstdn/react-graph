@@ -88,8 +88,6 @@ function GraphNode<TId extends string | number>({
 
   if (!node) return null;
 
-
-
   const childrenCount = node.childrenIds.length;
   const hasChildren = childrenCount > 0;
   const leaf = childrenCount === 0;
@@ -122,7 +120,7 @@ function GraphNode<TId extends string | number>({
 
   return (
     <Level
-      nodeContent={nodeContent ? nodeContent : node.name}
+      nodeContent={nodeContent ? nodeContent(node) : node.name}
       isRoot={isRoot}
       isLeaf={leaf}
       isSelected={!!selected}
