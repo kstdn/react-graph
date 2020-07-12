@@ -12,7 +12,7 @@ export type GraphStyleProps = {
   /**
    *
    */
-  nodeSpace?: string;
+  nodePadding?: string;
 
   /**
    *

@@ -5,7 +5,7 @@ export const mapPropsToStyle = (props: GraphStyleProps = {}): CSSProperties => {
   return {
     ["--graph-space" as any]: props.graphSpace,
     ["--text-color" as any]: props.textColor,
-    ["--nodeSpace" as any]: props.nodeSpace,
+    ["--node-padding" as any]: props.nodePadding,
     ["--node-stroke-color" as any]: props.nodeStrokeColor,
     ["--node-background" as any]: props.nodeBackground,
     ["--focused-node-stroke-color" as any]: props.focusedNodeStrokeColor,
