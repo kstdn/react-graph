@@ -1,16 +1,12 @@
-import React, {
-  FunctionComponent,
-  ReactNode,
-  useEffect,
-  useState,
-} from 'react';
+import React, { FunctionComponent, ReactNode, useState, useRef } from 'react';
 import GraphNode from './components/GraphNode';
 import LoadingRoot from './components/Presentation/LoadingRoot';
 import Providers from './context/Providers';
 import { GraphNodeDef } from './models/GraphNodeDef';
 import { GraphStyleProps } from './models/GraphStyleProps';
 import styles from './styles.module.css';
-import { mapPropsToStyle } from './util';
+import { useBeforeFirstRender } from './useBeforeFirstRender';
+import { mapPropsToStyle, hasUnloadedNodes } from './util';
 import { getAllUniqueNodeIds, VisibleGraphNode } from './visible-graph.util';
 
 const visibleStateKey = 'visible-state';
@@ -89,7 +85,8 @@ function Graph<TId extends string | number>({
       ? JSON.parse(localStorage.getItem(visibleStateKey) ?? '[]')
       : []
   );
-  const [loading, setLoading] = useState(preloadVisibleNodes ? true : false);
+
+  const loadingInitialValue = useRef(preloadVisibleNodes ? true : false);
 
   const loadNodesFunc = (childrenIds: TId[]): Promise<void> => {
     const toLoad = childrenIds.filter(id => !nodes.has(id));
@@ -105,22 +102,21 @@ function Graph<TId extends string | number>({
       : Promise.resolve();
   };
 
-  useEffect(() => {
-    let isCanceled = false;
-
-    if (preloadVisibleNodes && !isCanceled) {
+  useBeforeFirstRender((isCanceled) => {
+    if (preloadVisibleNodes) {
       const allUniquesIds = getAllUniqueNodeIds(visibleGraph);
-      if (!allUniquesIds.length) {
-        setLoading(false);
+      if (!allUniquesIds.length || !hasUnloadedNodes(allUniquesIds, Array.from(nodes.keys()))) {
+        loadingInitialValue.current = false;
       } else {
-        loadNodesFunc(allUniquesIds).then(() => setLoading(false));
+        loadNodesFunc(allUniquesIds).then(() => {
+          !isCanceled.value && setLoading(false)
+        });
       }
     }
+  });
 
-    return () => {
-      isCanceled = true;
-    };
-  }, []);
+  const [loading, setLoading] = useState(loadingInitialValue.current);
+
 
   const isSelected = (nodeId: TId) => {
     return !!(selectedNode && nodeId === selectedNode.id);

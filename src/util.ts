@@ -30,3 +30,7 @@ export enum LoadingStatus {
   Resolved = 'Resolved',
   Rejected = 'Rejected',
 }
+
+export function hasUnloadedNodes<TId>(ids: TId[], nodeIds: TId[]) {
+  return ids.some(id => !nodeIds.includes(id));
+}
