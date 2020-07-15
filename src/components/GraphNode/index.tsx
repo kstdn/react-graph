@@ -94,6 +94,7 @@ function GraphNode<TId extends string | number>({
 
   const handleNodeInteraction = () => {
     onVisibilityToggled(path, node.childrenIds);
+    onNodeClick && onNodeClick(node);
   };
 
   const nodeChildren = (
