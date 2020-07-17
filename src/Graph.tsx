@@ -109,7 +109,7 @@ function Graph<TId extends string | number>({
   useBeforeFirstRender(isCanceled => {
     if (preloadVisibleNodes) {
       const visibleGraphRootNodesIds = getRootNodesIds(visibleGraph);
-      const allUniquesIds = getAllUniqueNodeIds(visibleGraph);
+      const allUniquesIds = getAllUniqueNodeIds(visibleGraph, rootNodeId);
       if (
         !visibleGraphRootNodesIds.includes(rootNodeId) ||
         !allUniquesIds.length ||
