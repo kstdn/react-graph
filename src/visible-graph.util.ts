@@ -147,3 +147,6 @@ const getAllNodeIds = <TId>(visibleGraph: VisibleGraphNode<TId>[]): TId[] =>
 export const getAllUniqueNodeIds = <TId>(
   visibleGraph: VisibleGraphNode<TId>[]
 ): TId[] => Array.from(new Set(getAllNodeIds(visibleGraph)));
+
+export const getRootNodesIds = <TId>(visibleGraph: VisibleGraphNode<TId>[]) =>
+  visibleGraph.map(node => node.value);

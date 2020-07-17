@@ -7,7 +7,11 @@ import { GraphStyleProps } from './models/GraphStyleProps';
 import styles from './styles.module.css';
 import { useBeforeFirstRender } from './useBeforeFirstRender';
 import { mapPropsToStyle, hasUnloadedNodes } from './util';
-import { getAllUniqueNodeIds, VisibleGraphNode } from './visible-graph.util';
+import {
+  getAllUniqueNodeIds,
+  VisibleGraphNode,
+  getRootNodesIds,
+} from './visible-graph.util';
 
 const visibleStateKey = 'visible-state';
 
@@ -102,21 +106,25 @@ function Graph<TId extends string | number>({
       : Promise.resolve();
   };
 
-  useBeforeFirstRender((isCanceled) => {
+  useBeforeFirstRender(isCanceled => {
     if (preloadVisibleNodes) {
+      const visibleGraphRootNodesIds = getRootNodesIds(visibleGraph);
       const allUniquesIds = getAllUniqueNodeIds(visibleGraph);
-      if (!allUniquesIds.length || !hasUnloadedNodes(allUniquesIds, Array.from(nodes.keys()))) {
+      if (
+        !visibleGraphRootNodesIds.includes(rootNodeId) ||
+        !allUniquesIds.length ||
+        !hasUnloadedNodes(allUniquesIds, Array.from(nodes.keys()))
+      ) {
         loadingInitialValue.current = false;
       } else {
         loadNodesFunc(allUniquesIds).then(() => {
-          !isCanceled.value && setLoading(false)
+          !isCanceled.value && setLoading(false);
         });
       }
     }
   });
 
   const [loading, setLoading] = useState(loadingInitialValue.current);
-
 
   const isSelected = (nodeId: TId) => {
     return !!(selectedNode && nodeId === selectedNode.id);
