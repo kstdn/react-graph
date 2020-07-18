@@ -1,4 +1,10 @@
-import React, { FunctionComponent, ReactNode, useState, useRef } from 'react';
+import React, {
+  FunctionComponent,
+  MouseEvent,
+  ReactNode,
+  useRef,
+  useState,
+} from 'react';
 import GraphNode from './components/GraphNode';
 import LoadingRoot from './components/Presentation/LoadingRoot';
 import Providers from './context/Providers';
@@ -6,11 +12,11 @@ import { GraphNodeDef } from './models/GraphNodeDef';
 import { GraphStyleProps } from './models/GraphStyleProps';
 import styles from './styles.module.css';
 import { useBeforeFirstRender } from './useBeforeFirstRender';
-import { mapPropsToStyle, hasUnloadedNodes } from './util';
+import { hasUnloadedNodes, mapPropsToStyle } from './util';
 import {
   getAllUniqueNodeIds,
-  VisibleGraphNode,
   getRootNodesIds,
+  VisibleGraphNode,
 } from './visible-graph.util';
 
 const visibleStateKey = 'visible-state';
@@ -53,17 +59,18 @@ type Props<TId> = {
    * Note: Will not fire after a click on an already selected node
    */
   onNodeSelected?: (node: GraphNodeDef<TId>) => any;
-
   /**
-   * Element to be displayed while loading children
+   * Fired after a node has been deselected
+   */
+  onNodeDeselected?: (node: GraphNodeDef<TId>) => any;
+  /**
+   * Element to be displayed while loading
    */
   loadingIndicator?: ReactNode;
-
   /**
    * Function to be used for loading new nodes into memory
    */
   loadNodesAsyncFunc?: (ids: TId[]) => Promise<GraphNodeDef<TId>[]>;
-
   /**
    * Should all visible nodes be preloaded at once
    * using loadNodesAsyncFunc
@@ -79,6 +86,7 @@ function Graph<TId extends string | number>({
   persistVisibleState = false,
   onNodeClicked,
   onNodeSelected,
+  onNodeDeselected,
   loadingIndicator,
   loadNodesAsyncFunc,
   preloadVisibleNodes = true,
@@ -130,6 +138,21 @@ function Graph<TId extends string | number>({
     return !!(selectedNode && nodeId === selectedNode.id);
   };
 
+  const handleGraphClick = (event: MouseEvent<HTMLDivElement>) => {
+    // Deselect if
+    if (
+      // there is a selected node
+      !!selectedNode &&
+      // and the click target is inside this graph
+      event.currentTarget.contains(event.target as HTMLElement) &&
+      // and it is not a node
+      !(event.target as HTMLDivElement).classList.contains(styles['node'])
+    ) {
+      onNodeDeselected && onNodeDeselected(selectedNode);
+      setSelectedNode(undefined);
+    }
+  };
+
   const handleNodeClick = (node: GraphNodeDef<TId>) => {
     // Handle click
     onNodeClicked && onNodeClicked(node);
@@ -150,7 +173,11 @@ function Graph<TId extends string | number>({
       visibleGraph={visibleGraph}
       setVisibleGraph={setVisibleGraph}
     >
-      <div className={styles['graph']} style={mapPropsToStyle(graphStyles)}>
+      <div
+        className={styles['graph']}
+        style={mapPropsToStyle(graphStyles)}
+        onClick={e => handleGraphClick(e)}
+      >
         {loading ? (
           <LoadingRoot loadingIndicator={loadingIndicator} />
         ) : (
